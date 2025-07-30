@@ -7,7 +7,7 @@ export default function RootLayout() {
             gestureEnabled: true,
             gestureDirection: 'horizontal',
             fullScreenGestureEnabled: true,
-            animation: 'slide_from_right',
+            animation: 'fade_from_bottom',
             headerShown: false,
           }}
         />

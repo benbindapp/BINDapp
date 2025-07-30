@@ -1,16 +1,8 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
 import {
   ArrowDown,
   ArrowUp,
+  BarChart3,
   FileText,
   Home,
   MessageCircle,
@@ -18,363 +10,291 @@ import {
   RefreshCw,
   Search,
   User,
-} from 'react-native-feather';
+} from 'lucide-react-native';
+import React from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-type CurrentPage = 'home' | 'manage' | 'messages' | 'profile';
+interface BindManageScreenProps {
+  onContractsPress?: () => void;
+  onPaymentsSentPress?: () => void;
+  onPaymentsReceivedPress?: () => void;
+  onRecurringPaymentsPress?: () => void;
+  onBusinessSnapshotPress?: () => void;
+  onHomePress?: () => void;
+  onCreateContractPress?: () => void;
+  onMessagesPress?: () => void;
+  onProfilePress?: () => void;
+}
 
-export default function ManagementPage() {
-  const router = useRouter();
-  const [currentPage, setCurrentPage] = useState<CurrentPage>('manage');
+const BindManageScreen: React.FC<BindManageScreenProps> = ({
+  onContractsPress,
+  onPaymentsSentPress,
+  onPaymentsReceivedPress,
+  onRecurringPaymentsPress,
+  onBusinessSnapshotPress,
+  onHomePress,
+  onCreateContractPress,
+  onMessagesPress,
+  onProfilePress,
+}) => {
+  const router = useRouter()
 
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  interface NavButtonProps {
-    page: CurrentPage;
-    label: string;
-    icon: React.ReactNode;
-    onPress: () => void;
-  }
-
-  const NavButton: React.FC<NavButtonProps> = ({ page, label, icon, onPress }) => (
-    <TouchableOpacity style={styles.navButton} onPress={onPress}>
-      {icon}
-      <Text style={[styles.navText, currentPage === page && styles.navTextActive]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const BottomNav: React.FC = () => (
-    <View style={styles.bottomNav}>
-      <View style={styles.bottomNavContainer}>
-        <NavButton
-          page="home"
-          label="Home"
-          icon={<Home width={24} height={24} color={currentPage === 'home' ? '#10B981' : '#9CA3AF'} />}
-          onPress={() => router.push('/homepages/home')}
-        />
-        <NavButton
-          page="manage"
-          label="Manage"
-          icon={<FileText width={24} height={24} color={currentPage === 'manage' ? '#10B981' : '#9CA3AF'} />}
-          onPress={() => setCurrentPage('manage')}
-        />
-        <TouchableOpacity style={styles.createButton}>
-          <Plus width={24} height={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <NavButton
-          page="messages"
-          label="Messages"
-          icon={<MessageCircle width={24} height={24} color={currentPage === 'messages' ? '#10B981' : '#9CA3AF'} />}
-          onPress={() => router.push('/homepages/messages')}
-        />
-        <NavButton
-          page="profile"
-          label="Profile"
-          icon={<User width={24} height={24} color={currentPage === 'profile' ? '#10B981' : '#9CA3AF'} />}
-          onPress={() => router.push('/homepages/profile')}
-        />
-      </View>
-    </View>
-  );
-
-  interface ManageButtonProps {
-    title: string;
-    subtitle: string;
-    iconColor: string;
-    backgroundColor: string;
-    icon: React.ReactNode;
-    onPress: () => void;
-  }
-
-  const ManageButton: React.FC<ManageButtonProps> = ({
-    title,
-    subtitle,
-    iconColor,
-    backgroundColor,
-    icon,
-    onPress
-  }) => (
-    <TouchableOpacity style={styles.manageButton} onPress={onPress}>
-      <View style={styles.manageButtonContent}>
-        <View style={styles.iconContainer}>
-          <View style={[styles.iconCircle, { backgroundColor }]}>
-            {React.cloneElement(icon as React.ReactElement, {
-              width: 24,
-              height: 24,
-              color: iconColor,
-              opacity: 0.5
-            })}
-          </View>
-        </View>
-        <View style={styles.manageButtonText}>
-          <Text style={styles.manageButtonTitle}>{title}</Text>
-          <Text style={styles.manageButtonSubtitle}>{subtitle}</Text>
-        </View>
-      </View>
-      <Text style={styles.chevron}></Text>
-    </TouchableOpacity>
-  );
 
   return (
+    
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.header}>
-          <Search width={24} height={24} color="#9CA3AF" opacity={0.5} />
-          <Text style={styles.headerTitle}>Manage</Text>
-          <View style={styles.profileIcon}>
-            <User width={20} height={20} color="#6B7280" />
-          </View>
+      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <Search size={24} color="#9ca3af" />
+        <Text style={styles.headerTitle}>Manage</Text>
+        <View style={styles.profileButton}>
+          <User size={20} color="#6b7280" />
         </View>
+      </View>
 
-        <View style={styles.content}>
-          <View style={styles.taxSummaryCard}>
-            <Text style={styles.taxSummaryTitle}>Tax Summary 2025</Text>
-            <View style={styles.taxGrid}>
-              <View style={styles.taxItem}>
-                <Text style={styles.taxLabel}>Total Income</Text>
-                <Text style={styles.taxValue}>$28,500</Text>
+      {/* Content */}
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.buttonContainer}>
+          {/* Contracts Button */}
+          <TouchableOpacity style={styles.menuButton} onPress={() => router.push('homepages/manage/contracts')}>
+            <View style={styles.buttonContent}>
+              <View style={[styles.iconContainer, styles.blueIconBg]}>
+                <FileText size={24} color="#2563eb" />
               </View>
-              <View style={styles.taxItem}>
-                <Text style={styles.taxLabel}>Tax Savings</Text>
-                <Text style={styles.taxValue}>$1,915</Text>
-              </View>
-              <View style={styles.taxItem}>
-                <Text style={styles.taxLabel}>Deductions</Text>
-                <Text style={styles.taxValueSmall}>$5,000</Text>
-              </View>
-              <View style={styles.taxItem}>
-                <Text style={styles.taxLabel}>Next Payment</Text>
-                <Text style={styles.taxValueSmall}>$1,786</Text>
+              <View style={styles.textContainer}>
+                <Text style={styles.buttonTitle}>Contracts</Text>
+                <Text style={styles.buttonSubtitle}>3 active contracts</Text>
               </View>
             </View>
-            <TouchableOpacity 
-              style={styles.taxButton}
-              onPress={() => router.push('/homepages/manage/tax-dashboard')}
-            >
-              <Text style={styles.taxButtonText}>View Full Tax Dashboard</Text>
-            </TouchableOpacity>
-          </View>
+            <Text style={styles.chevron}></Text>
+          </TouchableOpacity>
 
-          <ManageButton
-            title="Contracts"
-            subtitle="3 active contracts"
-            iconColor="#2563EB"
-            backgroundColor="#DBEAFE"
-            icon={<FileText />}
-            onPress={() => router.push('/homepages/manage/contracts')}
-          />
+          {/* Payments Sent Button */}
+          <TouchableOpacity style={styles.menuButton} onPress={() => router.push('homepages/manage/payments-sent')}>
+            <View style={styles.buttonContent}>
+              <View style={[styles.iconContainer, styles.redIconBg]}>
+                <ArrowUp size={24} color="#dc2626" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.buttonTitle}>Payments Sent</Text>
+                <Text style={styles.buttonSubtitle}>$5,300 this month</Text>
+              </View>
+            </View>
+            <Text style={styles.chevron}></Text>
+          </TouchableOpacity>
 
-          <ManageButton
-            title="Payments Sent"
-            subtitle="$5,300 this month"
-            iconColor="#DC2626"
-            backgroundColor="#FEE2E2"
-            icon={<ArrowUp />}
-            onPress={() => router.push('/homepages/manage/payments-sent')}
-          />
+          {/* Payments Received Button */}
+          <TouchableOpacity style={styles.menuButton} onPress={() => router.push('homepages/manage/payments-received')}>
+            <View style={styles.buttonContent}>
+              <View style={[styles.iconContainer, styles.greenIconBg]}>
+                <ArrowDown size={24} color="#16a34a" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.buttonTitle}>Payments Received</Text>
+                <Text style={styles.buttonSubtitle}>$28,500 this year</Text>
+              </View>
+            </View>
+            <Text style={styles.chevron}></Text>
+          </TouchableOpacity>
 
-          <ManageButton
-            title="Payments Received"
-            subtitle="$28,500 this year"
-            iconColor="#059669"
-            backgroundColor="#D1FAE5"
-            icon={<ArrowDown />}
-            onPress={() => router.push('/homepages/manage/payments-received')}
-          />
+          {/* Recurring Payments Button */}
+          <TouchableOpacity style={styles.menuButton} onPress={() => router.push('homepages/manage/recurring-payments')}>
+            <View style={styles.buttonContent}>
+              <View style={[styles.iconContainer, styles.orangeIconBg]}>
+                <RefreshCw size={24} color="#ea580c" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.buttonTitle}>Recurring Payments</Text>
+                <Text style={styles.buttonSubtitle}>4 active subscriptions</Text>
+              </View>
+            </View>
+            <Text style={styles.chevron}></Text>
+          </TouchableOpacity>
 
-          <ManageButton
-            title="Recurring Payments"
-            subtitle="4 active subscriptions"
-            iconColor="#EA580C"
-            backgroundColor="#FED7AA"
-            icon={<RefreshCw />}
-            onPress={() => router.push('/homepages/manage/recurring-payments')}
-          />
+          {/* Business Snapshot Button */}
+          <TouchableOpacity style={styles.menuButton} onPress={onBusinessSnapshotPress}>
+            <View style={styles.buttonContent}>
+              <View style={[styles.iconContainer, styles.purpleIconBg]}>
+                <BarChart3 size={24} color="#9333ea" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.buttonTitle}>Business Snapshot</Text>
+                <Text style={styles.buttonSubtitle}>View revenue & expenses</Text>
+              </View>
+            </View>
+            <Text style={styles.chevron}></Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-      <BottomNav />
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/homepages/home')}>
+          <Home size={24} color="#9ca3af" />
+          <Text style={styles.navLabel}>Home</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.navItem}>
+          <FileText size={24} color="#22c55e" />
+          <Text style={[styles.navLabel, styles.activeNavLabel]}>Manage</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.centerNavButton} onPress={() => router.push('/homepages/createcontract/search')}>
+          <Plus size={24} color="#ffffff" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('homepages/messages')}>
+          <MessageCircle size={24} color="#9ca3af" />
+          <Text style={styles.navLabel}>Messages</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('homepages/profile')}>
+          <User size={24} color="#9ca3af" />
+          <Text style={styles.navLabel}>Profile</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  scrollView: {
-    flex: 1,
+    backgroundColor: '#f9fafb',
   },
   header: {
-    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
+    backgroundColor: '#ffffff',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#111827',
   },
-  profileIcon: {
+  profileButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#E5E7EB',
     borderRadius: 20,
-    alignItems: 'center',
+    backgroundColor: '#e5e7eb',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
+    flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 96,
   },
-  taxSummaryCard: {
-    backgroundColor: '#10B981',
+  buttonContainer: {
+    paddingTop: 16,
+    gap: 16,
+    paddingBottom: 100,
+  },
+  menuButton: {
+    backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 24,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  taxSummaryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  taxGrid: {
+    padding: 40,
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  taxItem: {
-    width: '48%',
-    marginBottom: 16,
-  },
-  taxLabel: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: 4,
-  },
-  taxValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  taxValueSmall: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  taxButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  taxButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  manageButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  manageButtonContent: {
+  buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
   iconContainer: {
-    marginRight: 16,
-  },
-  iconCircle: {
     width: 48,
     height: 48,
     borderRadius: 16,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
-  manageButtonText: {
+  blueIconBg: {
+    backgroundColor: '#dbeafe',
+  },
+  redIconBg: {
+    backgroundColor: '#fee2e2',
+  },
+  greenIconBg: {
+    backgroundColor: '#dcfce7',
+  },
+  orangeIconBg: {
+    backgroundColor: '#fed7aa',
+  },
+  purpleIconBg: {
+    backgroundColor: '#ede9fe',
+  },
+  textContainer: {
     flex: 1,
   },
-  manageButtonTitle: {
-    fontSize: 18,
+  buttonTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#111827',
     marginBottom: 4,
   },
-  manageButtonSubtitle: {
+  buttonSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6b7280',
   },
   chevron: {
     fontSize: 18,
-    color: '#9CA3AF',
+    color: '#9ca3af',
   },
   bottomNav: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  bottomNavContainer: {
+    borderTopColor: '#e5e7eb',
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    maxWidth: 448,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  navButton: {
-    flexDirection: 'column',
-    alignItems: 'center',
+    paddingHorizontal: 16,
     paddingVertical: 8,
+    paddingBottom: 20,
   },
-  navText: {
+  navItem: {
+    alignItems: 'center',
+    padding: 8,
+  },
+  navLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#6b7280',
     marginTop: 4,
   },
-  navTextActive: {
-    color: '#10B981',
+  activeNavLabel: {
+    color: '#22c55e',
   },
-  createButton: {
+  centerNavButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#10B981',
     borderRadius: 24,
-    alignItems: 'center',
+    backgroundColor: '#22c55e',
     justifyContent: 'center',
+    alignItems: 'center',
   },
 });
+
+export default BindManageScreen;

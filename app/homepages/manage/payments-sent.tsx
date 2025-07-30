@@ -1,6 +1,12 @@
 import { useRouter } from 'expo-router';
+import {
+  ArrowLeft,
+  Calendar,
+  Search,
+} from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
+  Dimensions,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -9,35 +15,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  Calendar,
-  DollarSign,
-  Filter,
-  Plus,
-  Search,
-  TrendingUp,
-} from 'react-native-feather';
-
-type PeriodKey = 'thisMonth' | 'lastMonth' | 'last3Months';
-type PaymentStatus = 'completed' | 'pending' | 'failed';
-
 interface Payment {
   id: number;
   recipient: string;
   service: string;
   amount: number;
   date: string;
-  status: PaymentStatus;
+  status: 'completed' | 'pending' | 'failed';
   avatar: string;
-  color: string;
+  color: 'orange' | 'red' | 'blue' | 'green' | 'purple' | 'indigo';
   paymentMethod: string;
 }
 
+const { width } = Dimensions.get('window');
+
 export default function PaymentsSentPage() {
-  const router = useRouter();
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('thisMonth');
+  const router = useRouter()
+  const [searchTerm, setSearchTerm] = useState('');
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -56,7 +50,7 @@ export default function PaymentsSentPage() {
       status: 'completed',
       avatar: 'AS',
       color: 'orange',
-      paymentMethod: 'Bank Transfer'
+      paymentMethod: 'ACH'
     },
     {
       id: 2,
@@ -67,7 +61,7 @@ export default function PaymentsSentPage() {
       status: 'completed',
       avatar: 'JS',
       color: 'red',
-      paymentMethod: 'Venmo'
+      paymentMethod: 'Debit Card'
     },
     {
       id: 3,
@@ -78,7 +72,7 @@ export default function PaymentsSentPage() {
       status: 'completed',
       avatar: 'MR',
       color: 'blue',
-      paymentMethod: 'Check'
+      paymentMethod: 'Credit Card'
     },
     {
       id: 4,
@@ -89,7 +83,7 @@ export default function PaymentsSentPage() {
       status: 'completed',
       avatar: 'GP',
       color: 'green',
-      paymentMethod: 'Cash'
+      paymentMethod: 'Wire Transfer'
     },
     {
       id: 5,
@@ -100,7 +94,7 @@ export default function PaymentsSentPage() {
       status: 'pending',
       avatar: 'TC',
       color: 'purple',
-      paymentMethod: 'Bank Transfer'
+      paymentMethod: 'ACH'
     },
     {
       id: 6,
@@ -111,164 +105,148 @@ export default function PaymentsSentPage() {
       status: 'completed',
       avatar: 'SJ',
       color: 'indigo',
-      paymentMethod: 'Bank Transfer'
+      paymentMethod: 'Wire Transfer'
     }
   ];
 
-  const monthlyStats = {
-    thisMonth: { total: 5300, count: 12, avgPayment: 442 },
-    lastMonth: { total: 4800, count: 10, avgPayment: 480 },
-    last3Months: { total: 14200, count: 32, avgPayment: 444 }
-  };
+  const filteredPayments = paymentsSent.filter(payment =>
+    payment.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const getStatusColor = (status: PaymentStatus) => {
+  const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'completed': return { text: '#059669', bg: '#D1FAE5' };
-      case 'pending': return { text: '#D97706', bg: '#FED7AA' };
-      case 'failed': return { text: '#DC2626', bg: '#FEE2E2' };
-      default: return { text: '#6B7280', bg: '#F3F4F6' };
+      case 'completed':
+        return { color: '#059669', backgroundColor: '#dcfce7' };
+      case 'pending':
+        return { color: '#d97706', backgroundColor: '#fed7aa' };
+      case 'failed':
+        return { color: '#dc2626', backgroundColor: '#fecaca' };
+      default:
+        return { color: '#6b7280', backgroundColor: '#f3f4f6' };
     }
   };
 
-  const getAvatarColor = (color: string): string => {
-    const colors: Record<string, string> = {
-      orange: '#F59E0B',
-      red: '#EF4444',
-      blue: '#3B82F6',
-      green: '#10B981',
-      purple: '#8B5CF6',
-      indigo: '#6366F1'
+  const getAvatarStyle = (color: string) => {
+    const colors = {
+      orange: ['#fb923c', '#f97316'],
+      red: ['#f87171', '#ef4444'],
+      blue: ['#60a5fa', '#3b82f6'],
+      green: ['#4ade80', '#22c55e'],
+      purple: ['#a78bfa', '#8b5cf6'],
+      indigo: ['#818cf8', '#6366f1']
     };
-    return colors[color] || colors.blue;
+    return colors[color as keyof typeof colors] || colors.blue;
   };
 
-  interface PaymentCardProps {
-    payment: Payment;
-  }
+  const PaymentCard: React.FC<{ payment: Payment }> = ({ payment }) => {
+    const avatarColors = getAvatarStyle(payment.color);
+    const statusStyle = getStatusStyle(payment.status);
 
-  const PaymentCard: React.FC<PaymentCardProps> = ({ payment }) => (
-    <View style={styles.paymentCard}>
-      <View style={styles.paymentHeader}>
-        <View style={styles.paymentLeft}>
-          <View style={[styles.avatar, { backgroundColor: getAvatarColor(payment.color) }]}>
-            <Text style={styles.avatarText}>{payment.avatar}</Text>
+    return (
+      <View style={styles.paymentCard}>
+        <View style={styles.cardHeader}>
+          <View style={styles.recipientInfo}>
+            <View style={[
+              styles.avatar,
+              { 
+                backgroundColor: avatarColors[0],
+                shadowColor: avatarColors[1],
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 8,
+              }
+            ]}>
+              <Text style={styles.avatarText}>{payment.avatar}</Text>
+            </View>
+            <View style={styles.recipientDetails}>
+              <Text style={styles.recipientName}>{payment.recipient}</Text>
+              <Text style={styles.serviceName}>{payment.service}</Text>
+            </View>
           </View>
+          <View style={styles.amountSection}>
+            <Text style={styles.amount}>-{formatCurrency(payment.amount)}</Text>
+            <View style={[styles.statusBadge, statusStyle]}>
+              <Text style={[styles.statusText, { color: statusStyle.color }]}>
+                {payment.status}
+              </Text>
+            </View>
+          </View>
+        </View>
+        
+        <View style={styles.cardFooter}>
           <View style={styles.paymentInfo}>
-            <Text style={styles.recipientName}>{payment.recipient}</Text>
-            <Text style={styles.serviceName}>{payment.service}</Text>
-          </View>
-        </View>
-        <View style={styles.paymentRight}>
-          <Text style={styles.paymentAmount}>-{formatCurrency(payment.amount)}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(payment.status).bg }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(payment.status).text }]}>
-              {payment.status}
+            <View style={styles.dateSection}>
+              <Calendar size={16} color="#6b7280" />
+              <Text style={styles.dateText}>
+                {new Date(payment.date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </Text>
+            </View>
+            <Text style={styles.paymentMethod}>
+              {payment.paymentMethod}
             </Text>
+            <TouchableOpacity>
+              <Text style={styles.receiptButton}>Receipt</Text>
+            </TouchableOpacity>
           </View>
+          <TouchableOpacity style={styles.viewDetailsButton}>
+            <Text style={styles.viewDetailsText}>View Details</Text>
+          </TouchableOpacity>
         </View>
       </View>
-      
-      <View style={styles.paymentFooter}>
-        <View style={styles.dateContainer}>
-          <Calendar width={16} height={16} color="#6B7280" opacity={0.5} />
-          <Text style={styles.dateText}>
-            {new Date(payment.date).toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric',
-              year: 'numeric'
-            })}
-          </Text>
-        </View>
-        <Text style={styles.paymentMethod}>{payment.paymentMethod}</Text>
-        <TouchableOpacity>
-          <Text style={styles.receiptButton}>Receipt</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    );
+  };
+
+  const handleGoBack = () => {
+    // Navigation logic here
+    console.log('Go back pressed');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <ArrowLeft width={24} height={24} color="#000000" />
+            <ArrowLeft width={24} height={24} color="#000000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Payments Sent</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Plus width={16} height={16} color="#FFFFFF" />
-        </TouchableOpacity>
+        <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.periodContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {[
-            { key: 'thisMonth', label: 'This Month' },
-            { key: 'lastMonth', label: 'Last Month' },
-            { key: 'last3Months', label: 'Last 3 Months' }
-          ].map((period) => (
-            <TouchableOpacity
-              key={period.key}
-              style={[styles.periodButton, selectedPeriod === period.key && styles.activePeriodButton]}
-              onPress={() => setSelectedPeriod(period.key as PeriodKey)}
-            >
-              <Text style={[styles.periodText, selectedPeriod === period.key && styles.activePeriodText]}>
-                {period.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <DollarSign width={20} height={20} color="#EF4444" opacity={0.5} />
-            </View>
-            <Text style={styles.statValue}>
-              {formatCurrency(monthlyStats[selectedPeriod].total)}
-            </Text>
-            <Text style={styles.statLabel}>Total Sent</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <ArrowUpRight width={20} height={20} color="#3B82F6" opacity={0.5} />
-            </View>
-            <Text style={styles.statValue}>
-              {monthlyStats[selectedPeriod].count}
-            </Text>
-            <Text style={styles.statLabel}>Payments</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <TrendingUp width={20} height={20} color="#10B981" opacity={0.5} />
-            </View>
-            <Text style={styles.statValue}>
-              {formatCurrency(monthlyStats[selectedPeriod].avgPayment)}
-            </Text>
-            <Text style={styles.statLabel}>Average</Text>
-          </View>
-        </View>
-
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Search */}
         <View style={styles.searchContainer}>
           <View style={styles.searchInputContainer}>
-            <Search width={16} height={16} color="#9CA3AF" style={styles.searchIcon} />
+            <Search size={16} color="#9ca3af" style={styles.searchIcon} />
             <TextInput
-              placeholder="Search payments..."
               style={styles.searchInput}
-              placeholderTextColor="#9CA3AF"
+              placeholder="Search by recipient, service, or payment method..."
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              placeholderTextColor="#9ca3af"
             />
           </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <Filter width={16} height={16} color="#6B7280" />
-          </TouchableOpacity>
         </View>
 
-        <View style={styles.paymentsSection}>
-          <Text style={styles.sectionTitle}>Recent Payments</Text>
-          {paymentsSent.map((payment) => (
-            <PaymentCard key={payment.id} payment={payment} />
-          ))}
+        {/* Payments List */}
+        <View style={styles.paymentsContainer}>
+          {filteredPayments.length > 0 ? (
+            filteredPayments.map((payment) => (
+              <PaymentCard key={payment.id} payment={payment} />
+            ))
+          ) : (
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>
+                No payments found matching your search.
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -278,10 +256,10 @@ export default function PaymentsSentPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#f9fafb',
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -289,220 +267,170 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  backButton: {
+    width: 24,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: '700',
+    color: '#000',
   },
-  addButton: {
-    backgroundColor: '#EF4444',
-    padding: 8,
-    borderRadius: 8,
-  },
-  periodContainer: {
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  periodButton: {
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  activePeriodButton: {
-    backgroundColor: '#EF4444',
-  },
-  periodText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  activePeriodText: {
-    color: '#FFFFFF',
-  },
-  scrollView: {
-    flex: 1,
+  headerSpacer: {
+    width: 24,
   },
   content: {
-    padding: 16,
+    flex: 1,
+    paddingHorizontal: 16,
     paddingBottom: 80,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  statCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  statIcon: {
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#EF4444',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    marginVertical: 24,
   },
   searchInputContainer: {
-    flex: 1,
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginRight: 12,
   },
   searchIcon: {
-    marginRight: 8,
+    position: 'absolute',
+    left: 12,
+    zIndex: 1,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 8,
-    fontSize: 16,
-    color: '#111827',
-  },
-  filterButton: {
-    backgroundColor: '#F3F4F6',
-    padding: 8,
+    paddingLeft: 40,
+    paddingRight: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
     borderRadius: 8,
+    backgroundColor: '#ffffff',
+    fontSize: 16,
+    color: '#000',
   },
-  paymentsSection: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 16,
+  paymentsContainer: {
+    marginBottom: 24,
   },
   paymentCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 8,
+    padding: 24,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#f3f4f6',
   },
-  paymentHeader: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 24,
   },
-  paymentLeft: {
+  recipientInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginRight: 16,
   },
   avatarText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    color: '#ffffff',
     fontSize: 14,
+    fontWeight: '700',
   },
-  paymentInfo: {
+  recipientDetails: {
     flex: 1,
   },
   recipientName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1f2937',
     marginBottom: 4,
   },
   serviceName: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6b7280',
   },
-  paymentRight: {
+  amountSection: {
     alignItems: 'flex-end',
   },
-  paymentAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#DC2626',
-    marginBottom: 4,
+  amount: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#dc2626',
+    marginBottom: 8,
   },
   statusBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 20,
+    borderRadius: 9999,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '500',
     textTransform: 'capitalize',
   },
-  paymentFooter: {
+  cardFooter: {
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  paymentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    marginBottom: 12,
   },
-  dateContainer: {
+  dateSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dateText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6b7280',
     marginLeft: 8,
   },
   paymentMethod: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6b7280',
   },
   receiptButton: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#3B82F6',
+    color: '#2563eb',
+  },
+  viewDetailsButton: {
+    width: '100%',
+    paddingVertical: 8,
+    backgroundColor: 'rgba(156, 163, 175, 0.7)',
+    borderRadius: 9999,
+    alignItems: 'center',
+  },
+  viewDetailsText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#6b7280',
   },
 });
+
